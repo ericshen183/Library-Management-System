@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Library Management</title>
+    <link rel="stylesheet" type="text/css" href="fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="Style.css">
+</head>
+
+<body>
+
+    <div class="limiter">
+        <div class="container-login">
+            <div class="wrap-login">
+                <form class="login-form validate-form" id="registerForm">
+                    <span class="login-form-title">
+                        Create Member Account
+                    </span>
+
+                    <!-- Status Text for Errors or Success -->
+                    <div id="statusMessage" class="text-center" style="margin-bottom: 20px; font-weight: bold;"></div>
+
+                    <div class="wrap-input validate-input" data-validate="Full name is required">
+                        <input class="input" type="text" name="fullName" id="regName">
+                        <span class="focus-input" data-placeholder="Full Name"></span>
+                    </div>
+
+                    <div class="wrap-input validate-input" data-validate="A valid email is required">
+                        <input class="input" type="email" name="email" id="regEmail">
+                        <span class="focus-input" data-placeholder="Email"></span>
+                    </div>
+
+                    <div class="wrap-input validate-input" data-validate="Password is required">
+                        <input class="input" type="password" name="password" id="regPassword">
+                        <span class="focus-input" data-placeholder="Password"></span>
+                    </div>
+
+                    <div class="wrap-input">
+                        <input class="input has-val" type="text" id="generatedMemberId" readonly>
+                        <span class="focus-input" data-placeholder="Assigned Member ID"></span>
+                    </div>
+
+                    <div class="container-login-form-btn">
+                        <div class="wrap-login-form-btn">
+                            <button class="login-form-btn" type="submit"> Sign Up </button>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center" style="margin-top: 20px; font-size: 13px; color: #666;">
+                        New registrations are created in the MongoDB <code>Library</code> database.
+                    </div>
+                    
+                    <div class="text-center" style="margin-top: 20px;">
+                        <span class="txt1">
+                            Already have an account?
+                        </span>
+                        <a class="txt2" href="Login.html"> Login </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script type="module" src="JS_register.js"></script>
+
+</body>
+
+</html>

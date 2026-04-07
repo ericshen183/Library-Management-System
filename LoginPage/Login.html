@@ -16,21 +16,21 @@
     <div class="limiter">
         <div class="container-login">
             <div class="wrap-login">
-                <form class="login-form validate-form">
+                <form class="login-form validate-form" id="loginForm">
                     <span class="login-form-title">
-                        Welcome
+                        Account Login
                     </span>
 
-                    <div class="wrap-input validate-input" data-validate="Valid email is: a@email.c">
-                        <input class="input" type="text" name="email">
-                        <span class="focus-input" data-placeholder="Email"></span>
+                    <!-- Status Text for Errors -->
+                    <div id="loginStatus" class="text-center" style="margin-bottom: 20px; font-weight: bold;"></div>
+
+                    <div class="wrap-input validate-input" data-validate="Login ID is required">
+                        <input class="input" type="text" name="loginId" id="loginId">
+                        <span class="focus-input" data-placeholder="Member or Librarian ID"></span>
                     </div>
 
-                    <div class="wrap-input validate-input" data-validate="Enter password">
-                        <span class="btn-show-pass">
-                            <i class="zmdi zmdi-eye"></i>
-                        </span>
-                        <input class="input" type="password" name="pass">
+                    <div class="wrap-input validate-input" data-validate="Password is required">
+                        <input class="input" type="password" name="password" id="loginPassword">
                         <span class="focus-input" data-placeholder="Password"></span>
                     </div>
 
@@ -39,11 +39,14 @@
                             <button class="login-form-btn"> Login </button>
                         </div>
                     </div>
-                    <div class="text-center">
+                    <div class="text-center" style="margin-top: 20px; font-size: 13px; color: #666;">
+                        Log in with the account ID and password stored in MongoDB.
+                    </div>
+                    <div class="text-center" style="margin-top: 20px;">
                         <span class="txt1">
                             Don't have an account?
                         </span>
-                        <a class="txt2" href="#"> Sign Up </a>
+                        <a class="txt2" href="Register.html"> Sign Up </a>
                     </div>
 
                 </form>
@@ -52,7 +55,7 @@
     </div>
 
     <script src="js/jquery-3.2.1.min.js"></script>
-    <script src="JS_main.js"></script>
+    <script type="module" src="JS_main.js"></script>
 
 
 

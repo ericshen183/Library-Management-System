@@ -1,3 +1,5 @@
+import { saveSessionUser } from "./JS_members.js";
+
 /*==================================================================
     [ Focus input ]*/
     $('.input').each(function(){
@@ -17,7 +19,8 @@
    
     var input = $('.validate-input .input');
 
-    $('.validate-form').on('submit',function(){
+    $('#loginForm').on('submit', async function(e){
+        e.preventDefault(); // Prevent standard HTTP post
         var check = true;
 
         for(var i=0; i<input.length; i++) {
@@ -27,7 +30,46 @@
             }
         }
 
-        return check;
+        if(check) {
+            const loginId = $('#loginId').val().trim();
+            const password = $('#loginPassword').val().trim();
+            const statusMsg = $('#loginStatus');
+
+            statusMsg.text('Logging in...').css('color', 'black');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ loginId, password })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.ok) {
+                    statusMsg.text(result.message || 'Invalid login ID or password.').css('color', 'red');
+                    return;
+                }
+
+                saveSessionUser(result.user);
+                statusMsg.text(`Welcome back, ${result.user.name}! Redirecting...`).css('color', 'green');
+
+                // Warm the next views so the account and library tabs feel faster after login.
+                Promise.allSettled([
+                    fetch('/api/account'),
+                    fetch('/api/books')
+                ]);
+
+                setTimeout(() => {
+                    window.location.href = result.redirectPath || "/LoginPage/dashboard.html";
+                }, 1000);
+            } catch (error) {
+                console.error("Error logging in: ", error);
+                statusMsg.text('Unable to reach the local login server. Start server.py and try again.').css('color', 'red');
+            }
+        }
     });
 
 
@@ -64,26 +106,5 @@
     
 
 
-
-
-/*==================================================================
-    [ Show pass ]*/
-  var showPass = 0;
-  $('.btn-show-pass').on('click', function(){
-    if(showPass == 0) 
-    {
-        $(this).next('input').attr('type','text');
-        $(this).find('i').removeClass('zmdi-eye');
-        $(this).find('i').addClass('zmdi-eye-off');
-        showPass = 1;
-    }
-    else 
-    {
-        $(this).next('input').attr('type','password');
-        $(this).find('i').addClass('zmdi-eye');
-        $(this).find('i').removeClass('zmdi-eye-off');
-        showPass = 0;
-    }
-  });
 
 

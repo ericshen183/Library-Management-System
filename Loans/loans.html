@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loans</title>
+    <link rel="stylesheet" type="text/css" href="../LoginPage/fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="../LoginPage/Style.css">
+    <link rel="stylesheet" href="loans.css">
+</head>
+
+<body>
+    <div class="loans-shell">
+        <div class="loans-panel">
+            <div class="loans-nav">
+                <div class="loans-brand">
+                    <h1>Loans</h1>
+                    <p>Current loans and loan history pulled from your MongoDB member record.</p>
+                </div>
+
+                <div class="loans-tabs">
+                    <a class="loans-tab" href="../Book%20search/library.html">Library</a>
+                    <a class="loans-tab active" href="loans.html">Loans</a>
+                    <a class="loans-tab" href="../LoginPage/dashboard.html">Account</a>
+                    <a class="loans-tab logout" href="/LoginPage/Login.html" id="logoutBtn">Logout</a>
+                </div>
+            </div>
+
+            <div class="loans-header">
+                <div class="loans-pill">
+                    <span>Signed in as</span>
+                    <strong id="loansMemberName">Loading...</strong>
+                </div>
+                <div class="loans-pill">
+                    <span>Current loans</span>
+                    <strong id="currentLoanCount">0</strong>
+                </div>
+                <div class="loans-pill">
+                    <span>Loan history</span>
+                    <strong id="loanHistoryCount">0</strong>
+                </div>
+            </div>
+
+            <div style="padding: 0 28px 18px; color: #5b707c;" id="loansStatusMessage">Requesting live loan data from MongoDB.</div>
+
+            <div class="loans-columns">
+                <section class="loan-card">
+                    <h2>Currently Loaned</h2>
+                    <p class="loan-copy">Books still checked out on your account.</p>
+                    <div id="currentLoansList" class="loan-list"></div>
+                </section>
+
+                <section class="loan-card">
+                    <h2>Loan History</h2>
+                    <p class="loan-copy">Previously returned books on your account.</p>
+                    <div id="loanHistoryList" class="loan-list"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function bootstrapLoansUser() {
+            try {
+                const storedUser = localStorage.getItem("library_current_user");
+                if (!storedUser) {
+                    return;
+                }
+
+                const member = JSON.parse(storedUser);
+                const currentLoans = Array.isArray(member.current_loans)
+                    ? member.current_loans
+                    : (member.current_loans ? [member.current_loans] : []);
+                const loanHistory = Array.isArray(member.loan_history)
+                    ? member.loan_history
+                    : (member.loan_history ? [member.loan_history] : []);
+
+                const setText = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                };
+
+                setText("loansMemberName", member.name || member._id || "Current User");
+                setText("currentLoanCount", String(currentLoans.length));
+                setText("loanHistoryCount", String(loanHistory.length));
+                setText("loansStatusMessage", "Loaded the tracked signed-in user from browser session storage.");
+            } catch (error) {
+                console.error("Loans bootstrap failed:", error);
+            }
+        }());
+    </script>
+    <script src="../LoginPage/js/jquery-3.2.1.min.js"></script>
+    <script type="module" src="loans.js"></script>
+</body>
+
+</html>

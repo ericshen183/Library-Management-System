@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Search</title>
+    <link rel="stylesheet" type="text/css" href="../LoginPage/fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="../LoginPage/Style.css">
+    <link rel="stylesheet" href="library.css">
+</head>
+
+<body>
+    <div class="library-shell">
+        <div class="library-panel">
+            <div class="library-nav">
+                <div class="library-brand">
+                    <h1>Library Search</h1>
+                    <p>Browse the MongoDB collection and search by title, author, year, ISBN, or copy number.</p>
+                </div>
+
+                <div class="library-tabs">
+                    <a class="library-tab active" href="library.html">Library</a>
+                    <a class="library-tab" href="../Loans/loans.html">Loans</a>
+                    <a class="library-tab" href="../LoginPage/dashboard.html">Account</a>
+                    <a class="library-tab logout" href="/LoginPage/Login.html" id="logoutBtn">Logout</a>
+                </div>
+            </div>
+
+            <div class="search-tools">
+                <div class="search-box">
+                    <label for="bookSearchInput">Search the collection</label>
+                    <input id="bookSearchInput" type="text" placeholder="Try Gatsby, Rowling, 1984, C002, or 9780439708180">
+                </div>
+
+                <div class="search-summary">
+                    <div class="summary-pill">
+                        <span>Signed in as</span>
+                        <strong id="sessionName">Loading...</strong>
+                    </div>
+                    <div class="summary-pill">
+                        <span>Books shown</span>
+                        <strong id="resultCount">0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="closest-match" id="closestMatchBanner" hidden>
+                Closest result: <strong id="closestMatchText"></strong>
+            </div>
+
+            <div class="status-row" id="libraryStatus">Loading books from MongoDB...</div>
+            <div class="status-row" id="librarySourceMessage">Waiting for live collection data.</div>
+
+            <div class="book-grid" id="bookGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        (function bootstrapLibraryUser() {
+            try {
+                const storedUser = localStorage.getItem("library_current_user");
+                if (!storedUser) {
+                    return;
+                }
+
+                const member = JSON.parse(storedUser);
+                const sessionName = document.getElementById("sessionName");
+                const sourceMessage = document.getElementById("librarySourceMessage");
+
+                if (sessionName) {
+                    sessionName.textContent = member.name || member._id || "Current User";
+                }
+
+                if (sourceMessage) {
+                    sourceMessage.textContent = "Loaded the tracked signed-in user from browser session storage.";
+                }
+            } catch (error) {
+                console.error("Library bootstrap failed:", error);
+            }
+        }());
+    </script>
+    <script src="../LoginPage/js/jquery-3.2.1.min.js"></script>
+    <script type="module" src="library.js"></script>
+</body>
+
+</html>
