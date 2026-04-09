@@ -1,65 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<title>Login Form Design Neumorphism</title>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-<!--=========================www.material design iconic font========================================-->
-	<link rel="stylesheet" type="text/css" href="fonts/iconic/css/material-design-iconic-font.min.css">
-<link rel="stylesheet" href="css/main.css">
-<!--===============================================================================================-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form Design Neumorphism</title>
+    <!--=========================www.material design iconic font========================================-->
+    <link rel="stylesheet" type="text/css" href="fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="Style.css">
+
 </head>
+
 <body>
 
-	<div class="limiter">
-		<div class="container-login">
-			<div class="wrap-login">
-				<form class="login-form validate-form">
-					<span class="login-form-title">
-						Welcome
-					</span>
-				
-					<div class="wrap-input validate-input" data-validate = "Valid email is: a@email.c">
-						<input class="input" type="text" name="email">
-						<span class="focus-input" data-placeholder="Email"></span>
-					</div>
+    <div class="limiter">
+        <div class="container-login">
+            <div class="wrap-login">
+                <form class="login-form validate-form" id="loginForm">
+                    <span class="login-form-title">
+                        Account Login
+                    </span>
 
-					<div class="wrap-input validate-input" data-validate="Enter password">
-						<span class="btn-show-pass">
-							<i class="zmdi zmdi-eye"></i>
-						</span>
-						<input class="input" type="password" name="pass">
-						<span class="focus-input" data-placeholder="Password"></span>
-					</div>
+                    <!-- Status Text for Errors -->
+                    <div id="loginStatus" class="text-center" style="margin-bottom: 20px; font-weight: bold;"></div>
 
-					<div class="container-login-form-btn">
-						<div class="wrap-login-form-btn">
-							<button class="login-form-btn">
-								Login
-							</button>
-						</div>
-					</div>
+                    <div class="wrap-input validate-input" data-validate="Login ID is required">
+                        <input class="input" type="text" name="loginId" id="loginId">
+                        <span class="focus-input" data-placeholder="Member or Librarian ID"></span>
+                    </div>
 
-					<div class="text-center">
-						<span class="txt1">
-							Don’t have an account?
-						</span>
+                    <div class="wrap-input validate-input" data-validate="Password is required">
+                        <input class="input" type="password" name="password" id="loginPassword">
+                        <span class="focus-input" data-placeholder="Password"></span>
+                    </div>
 
-						<a class="txt2" href="#">
-							Sign Up
-						</a>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	
+                    <div class="container-login-form-btn">
+                        <div class="wrap-login-form-btn">
+                            <button class="login-form-btn"> Login </button>
+                        </div>
+                    </div>
+                    <div class="text-center" style="margin-top: 20px; font-size: 13px; color: #666;">
+                        Log in with the account ID and password stored in MongoDB.
+                    </div>
+                    <div class="text-center" style="margin-top: 20px;">
+                        <span class="txt1">
+                            Don't have an account?
+                        </span>
+                        <a class="txt2" href="Register.html"> Sign Up </a>
+                    </div>
 
-<script src="js/jquery-3.2.1.min.js"></script>
+                </form>
+            </div>
+        </div>
+    </div>
 
-<script src="js/main.js"></script>
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script type="module" src="JS_main.js"></script>
 
 
 
 </body>
+
 </html>
