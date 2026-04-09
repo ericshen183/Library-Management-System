@@ -45,8 +45,15 @@ import { saveSessionUser } from "./JS_members.js";
                     },
                     body: JSON.stringify({ loginId, password })
                 });
+                const responseText = await response.text();
+                let result;
 
-                const result = await response.json();
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error("Invalid login response:", responseText);
+                    throw new Error('The live login service returned an invalid response.');
+                }
 
                 if (!response.ok || !result.ok) {
                     statusMsg.text(result.message || 'Invalid login ID or password.').css('color', 'red');
@@ -70,7 +77,7 @@ import { saveSessionUser } from "./JS_members.js";
                 }, 1000);
             } catch (error) {
                 console.error("Error logging in: ", error);
-                statusMsg.text('Unable to reach the local login server. Start server.py and try again.').css('color', 'red');
+                statusMsg.text(error.message || 'Unable to reach the live login service right now. Please try again in a moment.').css('color', 'red');
             }
         }
     });
