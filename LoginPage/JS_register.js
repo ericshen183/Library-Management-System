@@ -104,7 +104,7 @@ $('#registerForm').on('submit', async function(e){
 
         } catch (error) {
             console.error("Error adding document: ", error);
-            statusMsg.text('Unable to save member data. Please use a local server and try again.').css('color', 'red');
+            statusMsg.text(error.message || 'Unable to save member data right now. Please try again in a moment.').css('color', 'red');
         }
     }
 });
