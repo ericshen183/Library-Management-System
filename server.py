@@ -651,25 +651,6 @@ def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"))):
         except Exception as error:
             print(f"Failed to clear login_status during shutdown: {error}")
 
-    warmup_attempts = 3
-    warmup_delay_seconds = 3
-    warmup_succeeded = False
-
-    for attempt in range(1, warmup_attempts + 1):
-        try:
-            warm_mongodb_connection()
-            print(f"MongoDB connection warm-up succeeded on attempt {attempt}.")
-            warmup_succeeded = True
-            break
-        except Exception as error:
-            print(f"MongoDB connection warm-up failed on attempt {attempt} of {warmup_attempts}: {error}")
-            if attempt < warmup_attempts:
-                print(f"Retrying MongoDB warm-up in {warmup_delay_seconds} seconds...")
-                time.sleep(warmup_delay_seconds)
-
-    if not warmup_succeeded:
-        print("Starting the local server anyway so the app can load and report API errors.")
-
     server = ThreadingHTTPServer((host, port), LibraryRequestHandler)
     atexit.register(cleanup_active_sessions)
 
@@ -687,6 +668,26 @@ def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"))):
             continue
 
     print(f"Serving Library app on {host}:{port}")
+
+    warmup_attempts = 3
+    warmup_delay_seconds = 3
+    warmup_succeeded = False
+
+    for attempt in range(1, warmup_attempts + 1):
+        try:
+            warm_mongodb_connection()
+            print(f"MongoDB connection warm-up succeeded on attempt {attempt}.")
+            warmup_succeeded = True
+            break
+        except Exception as error:
+            print(f"MongoDB connection warm-up failed on attempt {attempt} of {warmup_attempts}: {error}")
+            if attempt < warmup_attempts:
+                print(f"Retrying MongoDB warm-up in {warmup_delay_seconds} seconds...")
+                time.sleep(warmup_delay_seconds)
+
+    if not warmup_succeeded:
+        print("Server is already running; MongoDB-backed routes may report API errors until connectivity recovers.")
+
     try:
         server.serve_forever()
     finally:
