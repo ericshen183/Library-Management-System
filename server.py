@@ -138,6 +138,12 @@ class LibraryRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         request_path = urlparse(self.path).path
 
+        if request_path == "/":
+            self.send_response(HTTPStatus.FOUND)
+            self.send_header("Location", "/LoginPage/Login.html")
+            self.end_headers()
+            return
+
         if request_path == "/api/logout":
             self._handle_logout()
             return
@@ -629,7 +635,7 @@ class LibraryRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def run_server(host="127.0.0.1", port=8000):
+def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"))):
     global _shutdown_started
 
     def cleanup_active_sessions():
@@ -643,6 +649,24 @@ def run_server(host="127.0.0.1", port=8000):
             print("Cleared active login_status records during server shutdown.")
         except Exception as error:
             print(f"Failed to clear login_status during shutdown: {error}")
+
+    server = ThreadingHTTPServer((host, port), LibraryRequestHandler)
+    atexit.register(cleanup_active_sessions)
+
+    def handle_shutdown_signal(signum, frame):
+        cleanup_active_sessions()
+        server.shutdown()
+
+    for signal_name in ("SIGINT", "SIGTERM", "SIGBREAK"):
+        shutdown_signal = getattr(signal, signal_name, None)
+        if shutdown_signal is None:
+            continue
+        try:
+            signal.signal(shutdown_signal, handle_shutdown_signal)
+        except (ValueError, OSError):
+            continue
+
+    print(f"Serving Library app on {host}:{port}")
 
     warmup_attempts = 3
     warmup_delay_seconds = 3
@@ -661,25 +685,7 @@ def run_server(host="127.0.0.1", port=8000):
                 time.sleep(warmup_delay_seconds)
 
     if not warmup_succeeded:
-        print("Starting the local server anyway so the app can load and report API errors.")
-
-    server = ThreadingHTTPServer((host, port), LibraryRequestHandler)
-    atexit.register(cleanup_active_sessions)
-
-    def handle_shutdown_signal(signum, frame):
-        cleanup_active_sessions()
-        server.shutdown()
-
-    for signal_name in ("SIGINT", "SIGTERM", "SIGBREAK"):
-        shutdown_signal = getattr(signal, signal_name, None)
-        if shutdown_signal is None:
-            continue
-        try:
-            signal.signal(shutdown_signal, handle_shutdown_signal)
-        except (ValueError, OSError):
-            continue
-
-    print(f"Serving Library app at http://{host}:{port}/LoginPage/Login.html")
+        print("Server is already running; MongoDB-backed routes may report API errors until connectivity recovers.")
     try:
         server.serve_forever()
     finally:
@@ -688,4 +694,7 @@ def run_server(host="127.0.0.1", port=8000):
 
 
 if __name__ == "__main__":
-    run_server()
+    run_server(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "10000"))
+    )
