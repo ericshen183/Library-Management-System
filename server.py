@@ -1,4 +1,5 @@
 import json
+import os
 import atexit
 import signal
 import time
@@ -629,7 +630,7 @@ class LibraryRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def run_server(host="127.0.0.1", port=8000):
+def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"):
     global _shutdown_started
 
     def cleanup_active_sessions():
@@ -679,7 +680,7 @@ def run_server(host="127.0.0.1", port=8000):
         except (ValueError, OSError):
             continue
 
-    print(f"Serving Library app at http://{host}:{port}/LoginPage/Login.html")
+    print(f"Serving Library app on {host}:{port}")
     try:
         server.serve_forever()
     finally:
@@ -688,4 +689,8 @@ def run_server(host="127.0.0.1", port=8000):
 
 
 if __name__ == "__main__":
-    run_server()
+    run_server(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "10000"))
+    )
+
