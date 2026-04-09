@@ -7,6 +7,7 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from http.cookies import SimpleCookie
+from threading import Thread
 from urllib.parse import parse_qs, urlparse
 
 from library import (
@@ -43,6 +44,10 @@ BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR
 SESSION_COOKIE_NAME = "library_session_id"
 _shutdown_started = False
+_mongodb_warmup_status = {
+    "state": "pending",
+    "message": "MongoDB warm-up has not started yet."
+}
 
 
 class LibraryRequestHandler(SimpleHTTPRequestHandler):
@@ -143,6 +148,14 @@ class LibraryRequestHandler(SimpleHTTPRequestHandler):
             self.send_response(HTTPStatus.FOUND)
             self.send_header("Location", "/LoginPage/Login.html")
             self.end_headers()
+            return
+
+        if request_path == "/healthz":
+            self._send_json({
+                "ok": True,
+                "service": "library-management-system",
+                "mongodbWarmup": _mongodb_warmup_status
+            })
             return
 
         if request_path == "/api/logout":
@@ -669,24 +682,33 @@ def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"))):
 
     print(f"Serving Library app on {host}:{port}")
 
-    warmup_attempts = 3
-    warmup_delay_seconds = 3
-    warmup_succeeded = False
+    def warm_mongodb_in_background():
+        _mongodb_warmup_status["state"] = "running"
+        _mongodb_warmup_status["message"] = "MongoDB warm-up is in progress."
+        warmup_attempts = 3
+        warmup_delay_seconds = 3
 
-    for attempt in range(1, warmup_attempts + 1):
-        try:
-            warm_mongodb_connection()
-            print(f"MongoDB connection warm-up succeeded on attempt {attempt}.")
-            warmup_succeeded = True
-            break
-        except Exception as error:
-            print(f"MongoDB connection warm-up failed on attempt {attempt} of {warmup_attempts}: {error}")
-            if attempt < warmup_attempts:
-                print(f"Retrying MongoDB warm-up in {warmup_delay_seconds} seconds...")
-                time.sleep(warmup_delay_seconds)
+        for attempt in range(1, warmup_attempts + 1):
+            try:
+                warm_mongodb_connection()
+                _mongodb_warmup_status["state"] = "ready"
+                _mongodb_warmup_status["message"] = f"MongoDB connection warm-up succeeded on attempt {attempt}."
+                print(_mongodb_warmup_status["message"])
+                return
+            except Exception as error:
+                _mongodb_warmup_status["state"] = "retrying"
+                _mongodb_warmup_status["message"] = f"MongoDB connection warm-up failed on attempt {attempt} of {warmup_attempts}: {error}"
+                print(_mongodb_warmup_status["message"])
+                if attempt < warmup_attempts:
+                    print(f"Retrying MongoDB warm-up in {warmup_delay_seconds} seconds...")
+                    time.sleep(warmup_delay_seconds)
 
-    if not warmup_succeeded:
-        print("Server is already running; MongoDB-backed routes may report API errors until connectivity recovers.")
+        _mongodb_warmup_status["state"] = "degraded"
+        _mongodb_warmup_status["message"] = "Server is running, but MongoDB warm-up did not succeed. MongoDB-backed routes may report API errors until connectivity recovers."
+        print(_mongodb_warmup_status["message"])
+
+    Thread(target=warm_mongodb_in_background, daemon=True).start()
+
     try:
         server.serve_forever()
     finally:
