@@ -133,27 +133,17 @@ def get_mongodb_database(uri=None, db_name=DEFAULT_DB_NAME):
         client = _mongo_clients.get(mongo_uri)
 
         if client is None:
-            client = MongoClient(mongo_uri, server_api=ServerApi("1"))
+            client = MongoClient(
+                mongo_uri,
+                server_api=ServerApi("1"),
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                socketTimeoutMS=10000
+            )
             _mongo_clients[mongo_uri] = client
 
-    available_database_names = []
-    try:
-        available_database_names = client.list_database_names()
-    except Exception:
-        available_database_names = []
-
-    resolved_db_name = cache_db_name
-    normalized_requested_name = str(cache_db_name or "").strip().lower()
-    if available_database_names and normalized_requested_name:
-        exact_match = next((name for name in available_database_names if name == cache_db_name), None)
-        case_insensitive_match = next(
-            (name for name in available_database_names if str(name).strip().lower() == normalized_requested_name),
-            None
-        )
-        resolved_db_name = exact_match or case_insensitive_match or cache_db_name
-
-    database = client[resolved_db_name]
-    _ensure_login_status_indexes(database, uri=uri, db_name=resolved_db_name)
+    database = client[cache_db_name]
+    _ensure_login_status_indexes(database, uri=uri, db_name=cache_db_name)
     return database
 
 
