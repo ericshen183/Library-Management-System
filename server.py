@@ -138,6 +138,12 @@ class LibraryRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         request_path = urlparse(self.path).path
+        
+        if request_path == "/":
+            self.send_response(HTTPStatus.FOUND)
+            self.send_header("Location", "/LoginPage/Login.html")
+            self.end_headers()
+            return
 
         if request_path == "/api/logout":
             self._handle_logout()
@@ -687,10 +693,8 @@ def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"))):
         cleanup_active_sessions()
         server.server_close()
 
-
 if __name__ == "__main__":
     run_server(
         host="0.0.0.0",
         port=int(os.getenv("PORT", "10000"))
     )
-
