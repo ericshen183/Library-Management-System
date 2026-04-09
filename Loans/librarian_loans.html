@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librarian Loans</title>
+    <link rel="stylesheet" type="text/css" href="../LoginPage/fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="../LoginPage/Style.css">
+    <link rel="stylesheet" href="loans.css">
+</head>
+
+<body>
+    <div class="loans-shell">
+        <div class="loans-panel">
+            <div class="loans-nav">
+                <div class="loans-brand">
+                    <h1>Librarian Loans</h1>
+                    <p>Pending documents from the <code>loan_requests</code> collection. Sessions close after 10 minutes of inactivity.</p>
+                </div>
+
+                <div class="loans-tabs">
+                    <a class="loans-tab" href="../Book%20search/library.html">Library</a>
+                    <a class="loans-tab active" href="librarian_loans.html">Loans</a>
+                    <a class="loans-tab" href="../LoginPage/dashboard.html">Account</a>
+                    <a class="loans-tab logout" href="/LoginPage/logout.html" id="logoutBtn">Logout</a>
+                </div>
+            </div>
+
+            <div class="loans-header">
+                <div class="loans-pill">
+                    <span>Signed in as</span>
+                    <strong id="loansMemberName">Loading...</strong>
+                </div>
+                <div class="loans-pill">
+                    <span>Pending requests</span>
+                    <strong id="currentLoanCount">0</strong>
+                </div>
+            </div>
+
+            <div style="padding: 0 28px 18px; color: #5b707c;" id="loansStatusMessage">Requesting live loan request data from MongoDB. Session timeout: 10 minutes of inactivity.</div>
+
+            <div class="loans-columns">
+                <section class="loan-card" style="grid-column: 1 / -1;">
+                    <h2>Pending Loan Requests</h2>
+                    <p class="loan-copy">Each card below is a pending document from <code>Library.loan_requests</code>. Issue a request to move it into the member's current loans.</p>
+                    <div id="librarianLoanOverview" class="loan-list">
+                        <div class="loan-empty">Loading pending loan requests...</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function bootstrapLibrarianLoansUser() {
+            try {
+                const storedUser = localStorage.getItem("library_current_user");
+                if (!storedUser) {
+                    return;
+                }
+
+                const member = JSON.parse(storedUser);
+                if (String(member.role || "").trim().toLowerCase() !== "librarian") {
+                    window.location.replace("loans.html");
+                    return;
+                }
+
+                const setText = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                };
+
+                setText("loansMemberName", member.name || member._id || "Current User");
+                setText("loansStatusMessage", "Loaded the tracked signed-in librarian from browser session storage. Session timeout: 10 minutes of inactivity.");
+            } catch (error) {
+                console.error("Librarian loans bootstrap failed:", error);
+            }
+        }());
+    </script>
+    <script src="librarian_loans.js" defer></script>
+</body>
+
+</html>

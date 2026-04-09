@@ -16,14 +16,14 @@
             <div class="loans-nav">
                 <div class="loans-brand">
                     <h1>Loans</h1>
-                    <p>Current loans and loan history pulled from your MongoDB member record.</p>
+                    <p>Current loans and loan history pulled from your MongoDB member record. Sessions close after 10 minutes of inactivity.</p>
                 </div>
 
                 <div class="loans-tabs">
                     <a class="loans-tab" href="../Book%20search/library.html">Library</a>
                     <a class="loans-tab active" href="loans.html">Loans</a>
                     <a class="loans-tab" href="../LoginPage/dashboard.html">Account</a>
-                    <a class="loans-tab logout" href="/LoginPage/Login.html" id="logoutBtn">Logout</a>
+                    <a class="loans-tab logout" href="/LoginPage/logout.html" id="logoutBtn">Logout</a>
                 </div>
             </div>
 
@@ -37,26 +37,31 @@
                     <strong id="currentLoanCount">0</strong>
                 </div>
                 <div class="loans-pill">
-                    <span>Loan history</span>
+                    <span id="secondaryLoanStatLabel">Loan history</span>
                     <strong id="loanHistoryCount">0</strong>
+                </div>
+                <div class="loans-pill">
+                    <span>Outstanding balance</span>
+                    <strong id="loanOutstandingBalance">$0.00</strong>
                 </div>
             </div>
 
-            <div style="padding: 0 28px 18px; color: #5b707c;" id="loansStatusMessage">Requesting live loan data from MongoDB.</div>
+            <div style="padding: 0 28px 18px; color: #5b707c;" id="loansStatusMessage">Requesting live loan data from MongoDB. Session timeout: 10 minutes of inactivity.</div>
 
             <div class="loans-columns">
-                <section class="loan-card">
+                <section class="loan-card" id="memberCurrentLoanCard">
                     <h2>Currently Loaned</h2>
                     <p class="loan-copy">Books still checked out on your account.</p>
                     <div id="currentLoansList" class="loan-list"></div>
                 </section>
 
-                <section class="loan-card">
+                <section class="loan-card" id="memberLoanHistoryCard">
                     <h2>Loan History</h2>
                     <p class="loan-copy">Previously returned books on your account.</p>
                     <div id="loanHistoryList" class="loan-list"></div>
                 </section>
             </div>
+
         </div>
     </div>
 
@@ -69,6 +74,11 @@
                 }
 
                 const member = JSON.parse(storedUser);
+                if (String(member.role || "").trim().toLowerCase() === "librarian") {
+                    window.location.replace("librarian_loans.html");
+                    return;
+                }
+
                 const currentLoans = Array.isArray(member.current_loans)
                     ? member.current_loans
                     : (member.current_loans ? [member.current_loans] : []);
@@ -83,10 +93,44 @@
                     }
                 };
 
+                const renderLoanList = (id, loans, emptyMessage, isHistory) => {
+                    const container = document.getElementById(id);
+                    if (!container) {
+                        return;
+                    }
+
+                    if (!loans.length) {
+                        container.innerHTML = `<div class="loan-empty">${emptyMessage}</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = loans.map((loan) => `
+                        <article class="loan-item">
+                            <div class="loan-title">${loan.book_title || "Untitled Book"}</div>
+                            <div class="loan-meta">
+                                <div><strong>Copy:</strong> ${loan.copy_no || "Unknown"}</div>
+                                <div><strong>Loan ID:</strong> ${loan.loan_id || "Unknown"}</div>
+                                <div><strong>Loan Date:</strong> ${loan.loan_date || "Unknown"}</div>
+                                <div><strong>Due Date:</strong> ${loan.due_date || "Unknown"}</div>
+                                ${isHistory && loan.return_date ? `<div><strong>Returned:</strong> ${loan.return_date}</div>` : ""}
+                            </div>
+                            ${!isHistory && Number(loan.overdue_days || 0) > 0 ? `
+                                <div class="loan-meta" style="margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(178, 71, 71, 0.10); border: 1px solid rgba(178, 71, 71, 0.18);">
+                                    <div><strong>Days Overdue:</strong> ${loan.overdue_days}</div>
+                                    <div><strong>Outstanding Fine:</strong> $${Number(loan.outstanding_fine_amount ?? loan.fine_amount ?? 0).toFixed(2)}</div>
+                                </div>
+                            ` : ""}
+                        </article>
+                    `).join("");
+                };
+
                 setText("loansMemberName", member.name || member._id || "Current User");
                 setText("currentLoanCount", String(currentLoans.length));
                 setText("loanHistoryCount", String(loanHistory.length));
-                setText("loansStatusMessage", "Loaded the tracked signed-in user from browser session storage.");
+                setText("loanOutstandingBalance", `$${Number(member.outstanding_balance ?? member.late_fee ?? 0).toFixed(2)}`);
+                setText("loansStatusMessage", "Loaded the tracked signed-in user from browser session storage. Session timeout: 10 minutes of inactivity.");
+                renderLoanList("currentLoansList", currentLoans, "No books are currently loaned on this account.", false);
+                renderLoanList("loanHistoryList", loanHistory, "No loan history is recorded yet.", true);
             } catch (error) {
                 console.error("Loans bootstrap failed:", error);
             }

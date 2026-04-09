@@ -53,7 +53,10 @@ import { saveSessionUser } from "./JS_members.js";
                     return;
                 }
 
-                saveSessionUser(result.user);
+                saveSessionUser({
+                    ...result.user,
+                    session_id: result.sessionId
+                });
                 statusMsg.text(`Welcome back, ${result.user.name}! Redirecting...`).css('color', 'green');
 
                 // Warm the next views so the account and library tabs feel faster after login.

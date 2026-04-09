@@ -200,6 +200,13 @@ body {
     background: rgba(32, 50, 62, 0.04);
 }
 
+.copy-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .copy-status {
     padding: 6px 10px;
     border-radius: 999px;
@@ -217,6 +224,19 @@ body {
 .copy-status.on-loan {
     background: rgba(182, 120, 43, 0.16);
     color: var(--warning);
+}
+
+.copy-action {
+    border: 0;
+    border-radius: 999px;
+    padding: 8px 14px;
+    background: rgba(32, 50, 62, 0.08);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: default;
 }
 
 .empty-state {

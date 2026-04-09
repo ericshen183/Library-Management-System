@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Details - Library Management</title>
+    <link rel="stylesheet" type="text/css" href="fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <style>
+        :root {
+            --page-bg: linear-gradient(135deg, #f2ede4 0%, #d7e7ec 100%);
+            --card-bg: rgba(255, 255, 255, 0.76);
+            --ink: #20323e;
+            --muted: #5b707c;
+            --accent: #2f8f83;
+            --accent-strong: #1d645b;
+            --danger: #b24747;
+            --line: rgba(32, 50, 62, 0.12);
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--page-bg);
+            color: var(--ink);
+        }
+
+        .member-shell {
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .member-panel {
+            max-width: 1160px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(26, 44, 58, 0.14);
+        }
+
+        .member-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .member-tabs {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .member-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 118px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+            color: var(--ink);
+            font-size: 14px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.66);
+            border: 1px solid rgba(32, 50, 62, 0.08);
+        }
+
+        .member-tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: transparent;
+        }
+
+        .member-tab.logout {
+            background: rgba(178, 71, 71, 0.12);
+            color: var(--danger);
+        }
+
+        .member-content {
+            padding: 34px 28px 40px;
+            display: grid;
+            gap: 24px;
+        }
+
+        .hero-card,
+        .detail-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(32, 50, 62, 0.08);
+            border-radius: 24px;
+            padding: 26px;
+        }
+
+        .hero-name {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .meta-grid,
+        .stats-grid,
+        .loan-columns {
+            display: grid;
+            gap: 16px;
+        }
+
+        .meta-grid,
+        .stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-top: 22px;
+        }
+
+        .loan-columns {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .meta-item,
+        .stat-item,
+        .loan-item {
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(32, 50, 62, 0.04);
+        }
+
+        .meta-label {
+            display: block;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .meta-value,
+        .stat-item strong {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .loan-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .payment-form {
+            display: grid;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .payment-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .payment-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .payment-field label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .payment-field input,
+        .payment-field select,
+        .payment-field textarea,
+        .payment-button {
+            border-radius: 14px;
+            border: 1px solid rgba(32, 50, 62, 0.14);
+            padding: 12px 14px;
+            font: inherit;
+            color: var(--ink);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .payment-field textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        .payment-button {
+            background: var(--accent);
+            color: white;
+            border-color: transparent;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .payment-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .payment-status {
+            min-height: 22px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .loan-meta {
+            display: grid;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+
+            .meta-grid,
+            .stats-grid,
+            .loan-columns,
+            .payment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .member-shell {
+                padding: 14px;
+            }
+
+            .member-nav,
+            .member-content {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .member-tab {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="member-shell">
+        <div class="member-panel">
+            <div class="member-nav">
+                <div>
+                    <h1>Member Details</h1>
+                    <p id="memberPageStatus" style="color: #5b707c; margin-top: 6px;">Requesting member details from
+                        MongoDB.</p>
+                </div>
+
+                <div class="member-tabs">
+                    <a class="member-tab" href="../Book%20search/library.html">Library</a>
+                    <a class="member-tab" href="../Loans/loans.html">Loans</a>
+                    <a class="member-tab active" href="dashboard.html">Account</a>
+                    <a class="member-tab logout" href="/LoginPage/logout.html" id="logoutBtn">Logout</a>
+                </div>
+            </div>
+
+            <div class="member-content">
+                <section class="hero-card">
+                    <div class="meta-label">Selected Member</div>
+                    <div class="hero-name" id="memberNameDisplay">Loading...</div>
+                    <p id="memberDescription">Preparing the selected member profile.</p>
+
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <span class="meta-label">Member ID</span>
+                            <span class="meta-value" id="memberIdDisplay">...</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Email</span>
+                            <span class="meta-value" id="memberEmailDisplay">...</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Phone</span>
+                            <span class="meta-value" id="memberPhoneDisplay">...</span>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="meta-label">Current Loans</span>
+                            <strong id="memberCurrentLoanCount">0</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span class="meta-label">Loan History</span>
+                            <strong id="memberLoanHistoryCount">0</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span class="meta-label">Late Fees</span>
+                            <strong id="memberLateFeeDisplay">$0.00</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="loan-columns">
+                    <section class="detail-card">
+                        <h2>Current Loans</h2>
+                        <div id="memberCurrentLoansList" class="loan-list"></div>
+                    </section>
+
+                    <section class="detail-card">
+                        <h2>Loan History</h2>
+                        <div id="memberLoanHistoryList" class="loan-list"></div>
+                    </section>
+                </div>
+
+                <div class="loan-columns">
+                    <section class="detail-card">
+                        <h2>Late Fee Summary</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="meta-label">Outstanding Balance</span>
+                                <strong id="memberOutstandingBalanceDisplay">$0.00</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span class="meta-label">Overdue Charges</span>
+                                <strong id="memberTotalChargesDisplay">$0.00</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span class="meta-label">Payments Received</span>
+                                <strong id="memberTotalPaymentsDisplay">$0.00</strong>
+                            </div>
+                        </div>
+
+                        <form id="memberPaymentForm" class="payment-form" action="javascript:void(0)" method="post" onsubmit="return window.handleMemberPaymentSubmission ? window.handleMemberPaymentSubmission(event) : false;">
+                            <div class="payment-grid">
+                                <div class="payment-field">
+                                    <label for="paymentAmountInput">Payment Amount</label>
+                                    <input id="paymentAmountInput" name="paymentAmount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+                                </div>
+                                <div class="payment-field">
+                                    <label for="paymentMethodSelect">Payment Method</label>
+                                    <select id="paymentMethodSelect" name="paymentMethod">
+                                        <option value="counter_cash">Counter Cash</option>
+                                        <option value="counter_card">Counter Card</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="payment-field">
+                                <label for="paymentNotesInput">Notes</label>
+                                <textarea id="paymentNotesInput" name="paymentNotes" placeholder="Optional note for the front desk receipt log."></textarea>
+                            </div>
+
+                            <button class="payment-button" id="memberPaymentSubmit" type="button" onclick="return window.handleMemberPaymentSubmission ? window.handleMemberPaymentSubmission(event) : false;">Process Payment</button>
+                            <div class="payment-status" id="memberPaymentStatus">No payment processed in this session.</div>
+                        </form>
+                    </section>
+
+                    <section class="detail-card">
+                        <h2>Payment History</h2>
+                        <div id="memberPaymentHistoryList" class="loan-list"></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function bootstrapSelectedMember() {
+            try {
+                const storedSelectedMember =
+                    sessionStorage.getItem("library_selected_member") ||
+                    localStorage.getItem("library_selected_member");
+
+                if (!storedSelectedMember) {
+                    return;
+                }
+
+                const member = JSON.parse(storedSelectedMember);
+                const normalizeLoanEntries = (entries) => {
+                    if (!entries) {
+                        return [];
+                    }
+
+                    if (Array.isArray(entries)) {
+                        return entries;
+                    }
+
+                    if (typeof entries === "object") {
+                        if (entries.copy_no || entries.loan_id) {
+                            return [entries];
+                        }
+
+                        return Object.keys(entries)
+                            .sort((left, right) => Number(left) - Number(right))
+                            .map((key) => entries[key])
+                            .filter((entry) => entry && typeof entry === "object");
+                    }
+
+                    return [];
+                };
+
+                const escapeHtml = (value) => String(value ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+
+                const currentLoans = normalizeLoanEntries(member.current_loans);
+                const loanHistory = normalizeLoanEntries(member.loan_history);
+                const paymentHistory = Array.isArray(member.payment_history) ? member.payment_history : [];
+
+                const setText = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                };
+
+                const renderLoanList = (id, loans, emptyMessage, isHistory) => {
+                    const container = document.getElementById(id);
+                    if (!container) {
+                        return;
+                    }
+
+                    if (!loans.length) {
+                        container.innerHTML = `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = loans.map((loan) => {
+                        const returnedLine = isHistory && loan.return_date
+                            ? `<div><strong>Returned:</strong> ${escapeHtml(loan.return_date)}</div>`
+                            : "";
+
+                        return `
+                            <article class="loan-item">
+                                <div><strong>${escapeHtml(loan.book_title || "Untitled Book")}</strong></div>
+                                <div class="loan-meta">
+                                    <div><strong>Copy:</strong> ${escapeHtml(loan.copy_no || "Unknown")}</div>
+                                    <div><strong>Loan ID:</strong> ${escapeHtml(loan.loan_id || "Unknown")}</div>
+                                    <div><strong>Loan Date:</strong> ${escapeHtml(loan.loan_date || "Unknown")}</div>
+                                    <div><strong>Due Date:</strong> ${escapeHtml(loan.due_date || "Unknown")}</div>
+                                    ${returnedLine}
+                                </div>
+                                ${!isHistory && Number(loan.overdue_days || 0) > 0 ? `
+                                    <div class="loan-meta" style="margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(178, 71, 71, 0.10); border: 1px solid rgba(178, 71, 71, 0.18);">
+                                        <div><strong>Days Overdue:</strong> ${escapeHtml(loan.overdue_days)}</div>
+                                        <div><strong>Outstanding Fine:</strong> $${Number(loan.outstanding_fine_amount ?? loan.fine_amount ?? 0).toFixed(2)}</div>
+                                    </div>
+                                ` : ""}
+                            </article>
+                        `;
+                    }).join("");
+                };
+
+                const renderPaymentList = (id, payments) => {
+                    const container = document.getElementById(id);
+                    if (!container) {
+                        return;
+                    }
+
+                    if (!payments.length) {
+                        container.innerHTML = '<div class="empty-state">No fee payments have been recorded for this member.</div>';
+                        return;
+                    }
+
+                    container.innerHTML = payments.map((payment) => `
+                        <article class="loan-item">
+                            <div><strong>$${Number(payment.amount_paid || 0).toFixed(2)}</strong></div>
+                            <div class="loan-meta">
+                                <div><strong>Receipt:</strong> ${escapeHtml(payment.receipt_no || "Pending")}</div>
+                                <div><strong>Method:</strong> ${escapeHtml(payment.payment_method || "counter_cash")}</div>
+                                <div><strong>Processed By:</strong> ${escapeHtml(payment.processed_by || "Unknown")}</div>
+                                <div><strong>Processed At:</strong> ${escapeHtml(payment.processed_at || "Unknown")}</div>
+                                <div><strong>Notes:</strong> ${escapeHtml(payment.notes || "None")}</div>
+                            </div>
+                        </article>
+                    `).join("");
+                };
+
+                setText("memberNameDisplay", member.name || "Unknown Member");
+                setText("memberIdDisplay", member._id || "Unknown");
+                setText("memberEmailDisplay", member.email || "Not Provided");
+                setText("memberPhoneDisplay", member.phone || "Not Provided");
+                setText("memberCurrentLoanCount", String(currentLoans.length));
+                setText("memberLoanHistoryCount", String(loanHistory.length));
+                setText("memberLateFeeDisplay", `$${Number(member.late_fee || 0).toFixed(2)}`);
+                setText("memberOutstandingBalanceDisplay", `$${Number(member.outstanding_balance ?? member.late_fee ?? 0).toFixed(2)}`);
+                setText("memberTotalChargesDisplay", `$${Number(member.outstanding_balance ?? member.late_fee ?? 0).toFixed(2)}`);
+                setText("memberTotalPaymentsDisplay", `$${Number(member.total_payments || 0).toFixed(2)}`);
+                setText("memberDescription", `Profile for ${member.name || "this member"} loaded from browser storage.`);
+                setText("memberPageStatus", "Showing the selected member from browser storage.");
+
+                renderLoanList("memberCurrentLoansList", currentLoans, "This member has no current loans.", false);
+                renderLoanList("memberLoanHistoryList", loanHistory, "This member has no loan history.", true);
+                renderPaymentList("memberPaymentHistoryList", paymentHistory);
+            } catch (error) {
+                console.error("Member dashboard bootstrap failed:", error);
+            }
+        }());
+    </script>
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script type="module" src="member_dashboard.js"></script>
+</body>
+
+</html>

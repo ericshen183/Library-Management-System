@@ -1,1 +1,2 @@
 pymongo[srv]>=4.10
+pytest>=8.0

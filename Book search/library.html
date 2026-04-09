@@ -16,14 +16,14 @@
             <div class="library-nav">
                 <div class="library-brand">
                     <h1>Library Search</h1>
-                    <p>Browse the MongoDB collection and search by title, author, year, ISBN, or copy number.</p>
+                    <p>Browse the MongoDB collection and search by title, author, year, ISBN, or copy number. Sessions close after 10 minutes of inactivity.</p>
                 </div>
 
                 <div class="library-tabs">
                     <a class="library-tab active" href="library.html">Library</a>
                     <a class="library-tab" href="../Loans/loans.html">Loans</a>
                     <a class="library-tab" href="../LoginPage/dashboard.html">Account</a>
-                    <a class="library-tab logout" href="/LoginPage/Login.html" id="logoutBtn">Logout</a>
+                    <a class="library-tab logout" href="/LoginPage/logout.html" id="logoutBtn">Logout</a>
                 </div>
             </div>
 
@@ -50,7 +50,7 @@
             </div>
 
             <div class="status-row" id="libraryStatus">Loading books from MongoDB...</div>
-            <div class="status-row" id="librarySourceMessage">Waiting for live collection data.</div>
+            <div class="status-row" id="librarySourceMessage">Waiting for live collection data. Session timeout: 10 minutes of inactivity.</div>
 
             <div class="book-grid" id="bookGrid"></div>
         </div>
@@ -60,23 +60,223 @@
         (function bootstrapLibraryUser() {
             try {
                 const storedUser = localStorage.getItem("library_current_user");
+                const storedBooks = localStorage.getItem("library_books_cache");
                 if (!storedUser) {
-                    return;
+                    if (!storedBooks) {
+                        return;
+                    }
                 }
 
-                const member = JSON.parse(storedUser);
+                const member = storedUser ? JSON.parse(storedUser) : null;
                 const sessionName = document.getElementById("sessionName");
                 const sourceMessage = document.getElementById("librarySourceMessage");
+                const libraryStatus = document.getElementById("libraryStatus");
+                const resultCount = document.getElementById("resultCount");
+                const bookGrid = document.getElementById("bookGrid");
 
-                if (sessionName) {
+                if (sessionName && member) {
                     sessionName.textContent = member.name || member._id || "Current User";
                 }
 
                 if (sourceMessage) {
-                    sourceMessage.textContent = "Loaded the tracked signed-in user from browser session storage.";
+                    sourceMessage.textContent = storedBooks
+                        ? "Loaded cached book cards while MongoDB refreshes. Session timeout: 10 minutes of inactivity."
+                        : "Loaded the tracked signed-in user from browser session storage. Session timeout: 10 minutes of inactivity.";
                 }
+
+                if (!storedBooks || !bookGrid) {
+                    return;
+                }
+
+                const books = JSON.parse(storedBooks);
+                if (resultCount) {
+                    resultCount.textContent = String(books.length);
+                }
+
+                if (libraryStatus) {
+                    libraryStatus.textContent = "Showing cached books while MongoDB refreshes. Session timeout: 10 minutes of inactivity.";
+                }
+
+                bookGrid.innerHTML = books.map((book) => {
+                    const copiesMarkup = (book.copies || []).map((copy) => `
+                        <div class="copy-item">
+                            <span>${copy.copy_no || "Unknown"}</span>
+                            <span class="copy-status ${(copy.status || "Unknown").toLowerCase().replace(/\s+/g, "-")}">${copy.status || "Unknown"}</span>
+                        </div>
+                    `).join("");
+
+                    return `
+                        <article class="book-card">
+                            <h3>${book.title || "Untitled Book"}</h3>
+                            <div class="book-meta">
+                                <div><strong>Author:</strong> ${(book.author && book.author.name) || "Unknown"}</div>
+                                <div><strong>Year:</strong> ${book.year || "Unknown"}</div>
+                                <div><strong>ISBN:</strong> ${book._id || "Unknown"}</div>
+                            </div>
+                            <div class="copy-list">${copiesMarkup}</div>
+                        </article>
+                    `;
+                }).join("");
             } catch (error) {
                 console.error("Library bootstrap failed:", error);
+            }
+        }());
+
+        (function bootstrapLibraryBooks() {
+            const BOOKS_CACHE_KEY = "library_books_cache";
+
+            function getAuthorName(book) {
+                if (!book || !book.author) {
+                    return "Unknown";
+                }
+
+                if (typeof book.author === "string") {
+                    return book.author;
+                }
+
+                return book.author.name || "Unknown";
+            }
+
+            function getCopies(book) {
+                if (!book) {
+                    return [];
+                }
+
+                if (Array.isArray(book.copies)) {
+                    return book.copies;
+                }
+
+                if (Array.isArray(book.Copies)) {
+                    return book.Copies;
+                }
+
+                return [];
+            }
+
+            function getViewerRole() {
+                const storedUser = localStorage.getItem("library_current_user");
+                if (!storedUser) {
+                    return "";
+                }
+
+                try {
+                    const member = JSON.parse(storedUser);
+                    return String(member.role || "").trim().toLowerCase();
+                } catch (error) {
+                    console.error("Unable to parse stored viewer role:", error);
+                    return "";
+                }
+            }
+
+            function isCopyOnLoan(copyStatus) {
+                return String(copyStatus || "").trim().toLowerCase() === "on loan";
+            }
+
+            function createActionButton(bookId, copyNumber, copyStatus) {
+                const role = getViewerRole();
+                if (role === "member") {
+                    return `<button type="button" class="copy-action request-action-btn" data-book-id="${bookId || ""}" data-copy-no="${copyNumber}" data-action="request" onclick="window.handleLibraryCopyAction && window.handleLibraryCopyAction(this)">Ask to Loan</button>`;
+                }
+
+                if (role === "librarian") {
+                    if (!isCopyOnLoan(copyStatus)) {
+                        return "";
+                    }
+
+                    return `<button type="button" class="copy-action return-action-btn" data-book-id="${bookId || ""}" data-copy-no="${copyNumber}" data-action="return" onclick="window.handleLibraryCopyAction && window.handleLibraryCopyAction(this)">Return Book</button>`;
+                }
+
+                return `<button type="button" class="copy-action login-required-btn" data-book-id="${bookId || ""}" data-copy-no="${copyNumber}" data-action="login-required" disabled title="Sign in to manage loans.">Login Required</button>`;
+            }
+
+            function renderBooks(books) {
+                const resultCount = document.getElementById("resultCount");
+                const libraryStatus = document.getElementById("libraryStatus");
+                const sourceMessage = document.getElementById("librarySourceMessage");
+                const bookGrid = document.getElementById("bookGrid");
+
+                if (!bookGrid) {
+                    return;
+                }
+
+                if (resultCount) {
+                    resultCount.textContent = String(books.length);
+                }
+
+                if (!books.length) {
+                    if (libraryStatus) {
+                        libraryStatus.textContent = "No books were returned from the books collection. Session timeout: 10 minutes of inactivity.";
+                    }
+                    if (sourceMessage) {
+                        sourceMessage.textContent = "MongoDB returned an empty books list. Session timeout: 10 minutes of inactivity.";
+                    }
+                    bookGrid.innerHTML = '<div class="empty-state">No books found in Library.books.</div>';
+                    return;
+                }
+
+                if (libraryStatus) {
+                    libraryStatus.textContent = "Showing every book currently stored in MongoDB. Session timeout: 10 minutes of inactivity.";
+                }
+
+                if (sourceMessage) {
+                    sourceMessage.textContent = `Loaded ${books.length} books directly from MongoDB (Library.books). Session timeout: 10 minutes of inactivity.`;
+                }
+
+                bookGrid.innerHTML = books.map((book) => {
+                    const copiesMarkup = getCopies(book).map((copy) => {
+                        const copyNumber = copy.copy_no || copy.Copy_no || "Unknown";
+                        const copyStatus = copy.status || copy.availability || copy.Availability || "Unknown";
+                        const statusClass = String(copyStatus).toLowerCase().replace(/\s+/g, "-");
+                        return `
+                            <div class="copy-item">
+                                <div class="copy-details">
+                                    <span>${copyNumber}</span>
+                                    <span class="copy-status ${statusClass}">${copyStatus}</span>
+                                </div>
+                                ${createActionButton(book._id || "", copyNumber, copyStatus)}
+                            </div>
+                        `;
+                    }).join("");
+
+                    return `
+                        <article class="book-card">
+                            <h3>${book.title || "Untitled Book"}</h3>
+                            <div class="book-meta">
+                                <div><strong>Author:</strong> ${getAuthorName(book)}</div>
+                                <div><strong>Year:</strong> ${book.year || "Unknown"}</div>
+                                <div><strong>ISBN:</strong> ${book._id || "Unknown"}</div>
+                            </div>
+                            <div class="copy-list">${copiesMarkup}</div>
+                        </article>
+                    `;
+                }).join("");
+            }
+
+            async function fetchBooks() {
+                try {
+                    const response = await fetch(`/api/books?t=${Date.now()}`);
+                    const result = await response.json();
+
+                    if (!response.ok || !result.ok || result.source !== "mongodb" || result.collection !== "books") {
+                        throw new Error(result.message || "Unable to load books.");
+                    }
+
+                    const books = Array.isArray(result.books) ? result.books : [];
+                    localStorage.setItem(BOOKS_CACHE_KEY, JSON.stringify(books));
+                    renderBooks(books);
+                } catch (error) {
+                    const sourceMessage = document.getElementById("librarySourceMessage");
+                    if (sourceMessage) {
+                        sourceMessage.textContent = `Direct books fetch failed: ${error.message}`;
+                    }
+                    console.error("Direct library bootstrap failed:", error);
+                }
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", fetchBooks, { once: true });
+            } else {
+                fetchBooks();
             }
         }());
     </script>
