@@ -1,4 +1,5 @@
 import json
+import os
 import atexit
 import signal
 import time
@@ -691,7 +692,6 @@ def run_server(host="0.0.0.0", port=int(os.getenv("PORT", "10000"))):
     finally:
         cleanup_active_sessions()
         server.server_close()
-
 
 if __name__ == "__main__":
     run_server(
