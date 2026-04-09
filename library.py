@@ -15,6 +15,11 @@ except ImportError:
     MongoClient = None
     ServerApi = None
 
+try:
+    import certifi
+except ImportError:
+    certifi = None
+
 
 DATA_DIR = Path(__file__).resolve().parent / "LoginPage"
 DEFAULT_MONGODB_URI = "mongodb+srv://hazengraz426_db_user:BjHNNa6uLBjOwcI1@cluster0.vcr1cig.mongodb.net/?appName=Cluster0"
@@ -125,7 +130,7 @@ def _active_user_document_id(user_id):
 
 def get_mongodb_database(uri=None, db_name=DEFAULT_DB_NAME):
     if MongoClient is None:
-        raise ImportError("pymongo is not installed. Run `pip install pymongo[srv]` first.")
+        raise ImportError("pymongo is not installed. Run `pip install pymongo dnspython` first.")
 
     mongo_uri, cache_db_name = _cache_key(uri, db_name)
 
@@ -133,13 +138,17 @@ def get_mongodb_database(uri=None, db_name=DEFAULT_DB_NAME):
         client = _mongo_clients.get(mongo_uri)
 
         if client is None:
-            client = MongoClient(
-                mongo_uri,
-                server_api=ServerApi("1"),
-                serverSelectionTimeoutMS=5000,
-                connectTimeoutMS=5000,
-                socketTimeoutMS=10000
-            )
+            client_options = {
+                "server_api": ServerApi("1"),
+                "serverSelectionTimeoutMS": 5000,
+                "connectTimeoutMS": 5000,
+                "socketTimeoutMS": 10000,
+                "tls": True,
+            }
+            if certifi is not None:
+                client_options["tlsCAFile"] = certifi.where()
+
+            client = MongoClient(mongo_uri, **client_options)
             _mongo_clients[mongo_uri] = client
 
     database = client[cache_db_name]
