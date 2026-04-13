@@ -1,6 +1,7 @@
 from copy import deepcopy
 from datetime import datetime, timezone
 import re
+from datetime import timedelta
 
 import pytest
 
@@ -764,3 +765,51 @@ def test_intentional_failure_payment_does_not_reduce_balance(monkeypatch):
     # Intentionally incorrect expectation:
     # the real value should be 5.0 because the payment was already applied.
     assert result["late_fee"] == 10.0
+
+
+# --- Late Fee Calculation Tests ---
+
+def test_calculate_days_late_on_time():
+    """Test that no late days are counted if returned on due date."""
+    due_date = "2026-04-10"
+    comparison_date = "2026-04-10"
+    assert library._calculate_days_late(due_date, comparison_date) == 0
+
+def test_calculate_days_late_late_by_3_days():
+    """Test that 3 days late is calculated correctly."""
+    due_date = "2026-04-10"
+    comparison_date = "2026-04-13"
+    assert library._calculate_days_late(due_date, comparison_date) == 3
+
+def test_calculate_days_late_before_due():
+    """Test that returning before due date counts as 0 late days."""
+    due_date = "2026-04-10"
+    comparison_date = "2026-04-08"
+    assert library._calculate_days_late(due_date, comparison_date) == 0
+
+def test_calculate_fine_amount_zero_days():
+    """Test that no fine is charged for 0 late days."""
+    assert library._calculate_fine_amount(0) == 0.0
+
+def test_calculate_fine_amount_positive_days():
+    """Test that fine is correct for positive late days (3 days)."""
+    assert library._calculate_fine_amount(3) == 6.0  # 3 days * DAILY_FINE_RATE (2.0)
+
+def test_annotate_loan_record_on_time():
+    """Test that a loan returned on time is not overdue and has no fine."""
+    loan = {"due_date": "2026-04-10"}
+    annotated = library._annotate_loan_record(loan)
+    assert annotated["overdue_days"] == 0
+    assert annotated["fine_amount"] == 0.0
+    assert annotated["is_overdue"] is False
+
+def test_annotate_loan_record_late():
+    """Test that a loan returned 3 days late is marked overdue and fined correctly."""
+    due_date = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+    loan = {"due_date": due_date}
+    annotated = library._annotate_loan_record(loan)
+    assert annotated["overdue_days"] == 3
+    assert annotated["fine_amount"] == 6.0
+    assert annotated["is_overdue"] is True
+
+# --- End Late Fee Calculation Tests ---
